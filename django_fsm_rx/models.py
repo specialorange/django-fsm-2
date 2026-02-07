@@ -82,3 +82,24 @@ class FSMTransitionLog(models.Model):
 
     def __str__(self) -> str:
         return f"{self.content_type} #{self.object_id}: {self.source_state} -> {self.target_state}"
+
+    # Backwards compatibility aliases for django-fsm-log's StateLog field names
+    @property
+    def state(self) -> str:
+        """Backwards compatibility alias for target_state (django-fsm-log compatibility)."""
+        return self.target_state
+
+    @state.setter
+    def state(self, value: str) -> None:
+        """Backwards compatibility setter for target_state."""
+        self.target_state = value
+
+    @property
+    def transition(self) -> str:
+        """Backwards compatibility alias for transition_name (django-fsm-log compatibility)."""
+        return self.transition_name
+
+    @transition.setter
+    def transition(self, value: str) -> None:
+        """Backwards compatibility setter for transition_name."""
+        self.transition_name = value

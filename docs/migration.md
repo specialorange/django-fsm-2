@@ -250,6 +250,10 @@ DROP TABLE IF EXISTS django_fsm_log_statelog;
 | `by` | `by` |
 | `description` | `description` |
 
+```{note}
+**Backwards compatibility:** The old field names (`state` and `transition`) work automatically via property aliases. Existing code using `log.state` or `log.transition` will continue to work without modification.
+```
+
 ### Decorators
 
 The `@fsm_log_by` and `@fsm_log_description` decorators are available for compatibility:

@@ -412,6 +412,28 @@ class TestDjangoFSMLogShimBackwardsCompatibility:
         # StateLog is an alias to FSMTransitionLog
         assert StateLog is FSMTransitionLog
 
+    def test_state_log_field_aliases_work(self):
+        """StateLog field aliases (state, transition) should work for backwards compatibility."""
+        from django_fsm_log.models import StateLog
+
+        # Create an unsaved instance to test field access
+        log = StateLog(
+            transition_name="publish",
+            source_state="draft",
+            target_state="published",
+        )
+
+        # Old field names should work via property aliases
+        assert log.state == "published"  # alias for target_state
+        assert log.transition == "publish"  # alias for transition_name
+
+        # Setters should also work
+        log.state = "archived"
+        assert log.target_state == "archived"
+
+        log.transition = "archive"
+        assert log.transition_name == "archive"
+
     def test_django_fsm_log_decorators_import_works(self):
         """Imports from django_fsm_log.decorators should work."""
         # Clear cached imports
