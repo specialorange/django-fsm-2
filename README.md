@@ -1,6 +1,6 @@
 # Django FSM RX - Remanufactured Finite State Machine
 
-[![PyPI version](https://img.shields.io/pypi/v/django-fsm-rx.svg)](https://pypi.org/project/django-fsm-rx/)
+[![PyPI version](https://img.shields.io/pypi/v/django-fsm-rx.svg?cache_bust=1)](https://pypi.org/project/django-fsm-rx/)
 [![Documentation](https://readthedocs.org/projects/django-fsm-rx/badge/?version=latest)](https://django-fsm-rx.readthedocs.io/en/latest/?badge=latest)
 [![CI tests](https://github.com/specialorange/django-fsm-rx/actions/workflows/test.yml/badge.svg)](https://github.com/specialorange/django-fsm-rx/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/specialorange/django-fsm-rx/branch/main/graph/badge.svg)](https://codecov.io/gh/specialorange/django-fsm-rx)
