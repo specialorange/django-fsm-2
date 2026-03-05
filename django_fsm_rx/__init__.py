@@ -296,14 +296,19 @@ class Transition:
             return True
         return False
 
+    @property
+    def qualname(self) -> str:
+        """Return the qualified name of the transition method."""
+        return self.method.__qualname__
+
     def __hash__(self) -> int:
-        return hash(self.name)
+        return hash(self.qualname)
 
     def __eq__(self, other: object) -> bool:
+        if isinstance(other, Transition):
+            return hash(other) == hash(self)
         if isinstance(other, str):
             return other == self.name
-        if isinstance(other, Transition):
-            return other.name == self.name
         return False
 
 

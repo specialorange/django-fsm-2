@@ -154,6 +154,27 @@ def _create_audit_log_safe(
         logger.exception(f"Failed to create audit log for {type(instance).__name__}.{transition_name}: {e}")
 
 
+_FSM_LOG_PREFIX = "_fsm_log_"
+
+
+def _get_fsm_log_metadata(instance: Model) -> dict[str, Any]:
+    """
+    Collect all _fsm_log_* attributes from the instance.
+
+    Reads any attribute set by FSMLogDescriptor (e.g. _fsm_log_by,
+    _fsm_log_description, or custom attributes) and returns them
+    as a dict with the prefix stripped (e.g. {"by": user, "description": "..."}).
+    """
+    extra: dict[str, Any] = {}
+    for attr in list(vars(instance)):
+        if attr.startswith(_FSM_LOG_PREFIX):
+            value = getattr(instance, attr)
+            if value is not None:
+                key = attr[len(_FSM_LOG_PREFIX) :]
+                extra[key] = value
+    return extra
+
+
 def transaction_audit_callback(
     instance: Model,
     source: str,
@@ -175,21 +196,12 @@ def transaction_audit_callback(
     # Get transition name from kwargs if available
     transition_name = kwargs.get("transition_name", "unknown")
 
-    # Read log metadata set by fsm_log_by/fsm_log_description decorators
-    extra = {}
-    log_by = getattr(instance, "_fsm_log_by", None)
-    if log_by is not None:
-        extra["by"] = log_by
-    log_description = getattr(instance, "_fsm_log_description", None)
-    if log_description is not None:
-        extra["description"] = log_description
-
     _create_audit_log_safe(
         instance=instance,
         transition_name=transition_name,
         source_state=source,
         target_state=target,
-        **extra,
+        **_get_fsm_log_metadata(instance),
     )
 
 
@@ -214,19 +226,10 @@ def signal_audit_log(
     if fsm_rx_settings.AUDIT_LOG_MODE != "signal":
         return
 
-    # Read log metadata set by fsm_log_by/fsm_log_description decorators
-    extra = {}
-    log_by = getattr(instance, "_fsm_log_by", None)
-    if log_by is not None:
-        extra["by"] = log_by
-    log_description = getattr(instance, "_fsm_log_description", None)
-    if log_description is not None:
-        extra["description"] = log_description
-
     _create_audit_log_safe(
         instance=instance,
         transition_name=name,
         source_state=source,
         target_state=target,
-        **extra,
+        **_get_fsm_log_metadata(instance),
     )

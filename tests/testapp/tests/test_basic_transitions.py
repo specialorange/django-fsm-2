@@ -176,7 +176,7 @@ class TestFieldTransitionsInspect(TestCase):
             custom="",
         )
 
-        self.assertTrue(obj in transitions)
+        self.assertFalse(obj in transitions)
 
     def test_available_conditions_from_new(self):
         transitions = self.model.get_available_state_transitions()
