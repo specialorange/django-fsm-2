@@ -175,11 +175,21 @@ def transaction_audit_callback(
     # Get transition name from kwargs if available
     transition_name = kwargs.get("transition_name", "unknown")
 
+    # Read log metadata set by fsm_log_by/fsm_log_description decorators
+    extra = {}
+    log_by = getattr(instance, "_fsm_log_by", None)
+    if log_by is not None:
+        extra["by"] = log_by
+    log_description = getattr(instance, "_fsm_log_description", None)
+    if log_description is not None:
+        extra["description"] = log_description
+
     _create_audit_log_safe(
         instance=instance,
         transition_name=transition_name,
         source_state=source,
         target_state=target,
+        **extra,
     )
 
 
@@ -204,9 +214,19 @@ def signal_audit_log(
     if fsm_rx_settings.AUDIT_LOG_MODE != "signal":
         return
 
+    # Read log metadata set by fsm_log_by/fsm_log_description decorators
+    extra = {}
+    log_by = getattr(instance, "_fsm_log_by", None)
+    if log_by is not None:
+        extra["by"] = log_by
+    log_description = getattr(instance, "_fsm_log_description", None)
+    if log_description is not None:
+        extra["description"] = log_description
+
     _create_audit_log_safe(
         instance=instance,
         transition_name=name,
         source_state=source,
         target_state=target,
+        **extra,
     )
