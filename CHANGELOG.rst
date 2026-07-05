@@ -1,6 +1,26 @@
 Changelog
 =========
 
+django-fsm-rx 5.2.0 2026-07-05
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **BREAKING**: Remove the unused ``transition`` parameter from ``State.get_state``
+  (and its ``RETURN_VALUE`` / ``GET_STATE`` subclasses). The signature is now
+  ``get_state(model, result, args=(), kwargs=None)``. Code that subclasses ``State``
+  and overrides ``get_state``, or that calls it directly, must drop the ``transition``
+  argument. Ported from upstream django-fsm-2 (#136).
+- Use ``isinstance(next_state, State)`` instead of a ``hasattr`` duck-type check when
+  resolving dynamic target states.
+- Add exported ``ANY_STATE`` (``"*"``) and ``ANY_OTHER_STATE`` (``"+"``) constants and
+  use them in place of bare string literals in the transition-matching logic. Ported
+  from upstream django-fsm-2 (#123).
+- Fix: ``pre_transition`` / ``post_transition`` are now ``ModelSignal`` instances
+  (previously plain ``Signal``). Receivers can now be connected with a lazy string
+  sender such as ``"app_label.ModelName"`` -- matching Django's built-in model signals.
+  Previously such receivers were silently never called. Ported from upstream
+  django-fsm-2.
+
+
 django-fsm-rx 5.1.8 2026-01-18
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

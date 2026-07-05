@@ -151,6 +151,26 @@ class StateSignalsTests(TestCase):
         self.assertFalse(self.post_transition_called)
 
 
+class LazySenderTests(StateSignalsTests):
+    """Re-run the signal assertions, but connect via a lazy string sender.
+
+    Django resolves ``"testapp.BasicBlogPost"`` to the model class when the
+    signal fires, so transitions must still be dispatched to string-registered
+    receivers. Ported from django-fsm-2 for parity.
+    """
+
+    def setUp(self):
+        self.model = BasicBlogPost()
+        self.pre_transition_called = False
+        self.post_transition_called = False
+        pre_transition.connect(self.on_pre_transition, sender="testapp.BasicBlogPost")
+        post_transition.connect(self.on_post_transition, sender="testapp.BasicBlogPost")
+
+    def tearDown(self):
+        pre_transition.disconnect(self.on_pre_transition, sender="testapp.BasicBlogPost")
+        post_transition.disconnect(self.on_post_transition, sender="testapp.BasicBlogPost")
+
+
 class TestFieldTransitionsInspect(TestCase):
     def setUp(self):
         self.model = BasicBlogPost()

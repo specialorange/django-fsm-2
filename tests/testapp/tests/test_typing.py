@@ -332,14 +332,14 @@ class TestStateClassTyping(TestCase):
     def test_return_value_get_state(self):
         """RETURN_VALUE.get_state should return the result."""
         rv = RETURN_VALUE("a", "b")
-        state = rv.get_state(None, None, "a")
+        state = rv.get_state(None, "a")
         self.assertEqual(state, "a")
 
     def test_return_value_invalid_state(self):
         """RETURN_VALUE.get_state should raise for invalid states."""
         rv = RETURN_VALUE("a", "b")
         with self.assertRaises(InvalidResultState):
-            rv.get_state(None, None, "c")
+            rv.get_state(None, "c")
 
     def test_get_state_with_func(self):
         """GET_STATE should call func to determine state."""
@@ -348,7 +348,7 @@ class TestStateClassTyping(TestCase):
             return "computed"
 
         gs = GET_STATE(compute, states=["computed", "other"])
-        state = gs.get_state(None, None, None)
+        state = gs.get_state(None, None)
         self.assertEqual(state, "computed")
 
     def test_get_state_with_args(self):
@@ -358,7 +358,7 @@ class TestStateClassTyping(TestCase):
             return f"{x}_{y}"
 
         gs = GET_STATE(compute)
-        state = gs.get_state(None, None, None, args=(1, 2))
+        state = gs.get_state(None, None, args=(1, 2))
         self.assertEqual(state, "1_2")
 
     def test_get_state_invalid_result(self):
@@ -369,7 +369,7 @@ class TestStateClassTyping(TestCase):
 
         gs = GET_STATE(compute, states=["valid"])
         with self.assertRaises(InvalidResultState):
-            gs.get_state(None, None, None)
+            gs.get_state(None, None)
 
 
 class TestFSMMetaTyping(TestCase):

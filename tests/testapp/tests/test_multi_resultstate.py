@@ -18,6 +18,10 @@ class MultiResultTest(models.Model):
     def publish(self, is_public=False):
         return "published" if is_public else "for_moderators"
 
+    @transition(field=state, source="new", target=RETURN_VALUE())
+    def publish_without_states(self, is_public=False):
+        return "published" if is_public else "for_moderators"
+
     @transition(
         field=state,
         source="for_moderators",
@@ -27,6 +31,16 @@ class MultiResultTest(models.Model):
         ),
     )
     def moderate(self, allowed):
+        pass
+
+    @transition(
+        field=state,
+        source="for_moderators",
+        target=GET_STATE(
+            lambda self, allowed: "published" if allowed else "rejected",
+        ),
+    )
+    def moderate_without_states(self, allowed):
         pass
 
     class Meta:
@@ -42,6 +56,16 @@ class Test(TestCase):
     def test_get_state_succeed(self):
         instance = MultiResultTest(state="for_moderators")
         instance.moderate(allowed=False)
+        self.assertEqual(instance.state, "rejected")
+
+    def test_return_value_without_allowed_states_succeed(self):
+        instance = MultiResultTest()
+        instance.publish_without_states(is_public=True)
+        self.assertEqual(instance.state, "published")
+
+    def test_get_state_without_allowed_states_succeed(self):
+        instance = MultiResultTest(state="for_moderators")
+        instance.moderate_without_states(allowed=False)
         self.assertEqual(instance.state, "rejected")
 
 
@@ -66,8 +90,20 @@ class TestSignals(TestCase):
         self.assertTrue(self.pre_transition_called)
         self.assertTrue(self.post_transition_called)
 
+    def test_signals_called_with_get_state_without_states(self):
+        instance = MultiResultTest(state="for_moderators")
+        instance.moderate_without_states(allowed=False)
+        self.assertTrue(self.pre_transition_called)
+        self.assertTrue(self.post_transition_called)
+
     def test_signals_called_with_return_value(self):
         instance = MultiResultTest()
         instance.publish(is_public=True)
+        self.assertTrue(self.pre_transition_called)
+        self.assertTrue(self.post_transition_called)
+
+    def test_signals_called_with_return_value_without_states(self):
+        instance = MultiResultTest()
+        instance.publish_without_states(is_public=True)
         self.assertTrue(self.pre_transition_called)
         self.assertTrue(self.post_transition_called)

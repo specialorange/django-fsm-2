@@ -10,8 +10,46 @@ These tests verify:
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+from pathlib import Path
+
+
+class TestCleanImportWithoutDjangoStubs:
+    """Adapted from django-fsm-2 (#113).
+
+    Verify the package imports cleanly in a fresh interpreter with settings
+    merely ``configure()``-d and no ``DJANGO_SETTINGS_MODULE`` -- i.e. without
+    the django-stubs runtime monkeypatch that pytest-django applies in-process.
+    This guards against relying on that monkeypatch at import time.
+
+    Note: ``django_fsm_rx.admin`` is intentionally NOT covered here. Unlike
+    upstream, our admin module exposes a contenttypes-based
+    ``FSMTransitionLogInline`` and therefore imports ``contenttypes`` at module
+    load, which requires the app registry to be ready. Admin modules are only
+    imported after ``django.setup()``, so this is an accepted divergence.
+    """
+
+    def _run_import(self, module: str) -> subprocess.CompletedProcess[str]:
+        project_root = Path(__file__).resolve().parents[1]
+        env = os.environ.copy()
+        env.pop("DJANGO_SETTINGS_MODULE", None)
+        python_path = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{python_path}" if python_path else str(project_root)
+        code = f"from django.conf import settings; settings.configure(SECRET_KEY='test', USE_I18N=False); import {module}"
+        return subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            check=False,
+            cwd=project_root,
+            env=env,
+            text=True,
+        )
+
+    def test_main_module_imports_without_django_stubs_monkeypatch(self):
+        result = self._run_import("django_fsm_rx")
+        assert result.returncode == 0, result.stderr
 
 
 class TestStarImport:

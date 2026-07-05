@@ -55,10 +55,15 @@ Example:
 
 from __future__ import annotations
 
-from django.dispatch import Signal
+from django.db.models.signals import ModelSignal
+
+# ModelSignal (not a plain Signal) so receivers can be connected with a lazy
+# string sender like "app_label.ModelName" -- the same behaviour as Django's
+# built-in model signals (pre_save/post_save). A plain Signal would silently
+# drop such receivers.
 
 # Signal sent before a transition is executed
-pre_transition: Signal = Signal()
+pre_transition: ModelSignal = ModelSignal()
 
 # Signal sent after a transition completes (or fails with on_error defined)
-post_transition: Signal = Signal()
+post_transition: ModelSignal = ModelSignal()

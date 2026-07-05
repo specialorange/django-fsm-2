@@ -76,6 +76,8 @@ __all__ = [
     "GET_STATE",
     "RETURN_VALUE",
     "State",
+    "ANY_STATE",
+    "ANY_OTHER_STATE",
     "Transition",
     "TransitionCallback",
     "FSMMeta",
@@ -131,6 +133,12 @@ Example:
     def publish(self):
         pass
 """
+
+ANY_STATE = "*"
+"""Wildcard source matching any state."""
+
+ANY_OTHER_STATE = "+"
+"""Wildcard source matching any state except the transition's target state."""
 
 _F = TypeVar("_F", bound=Callable[..., Any])
 """TypeVar for decorated transition methods."""
@@ -490,12 +498,12 @@ class FSMMeta:
             return transition
 
         # 3. Universal wildcard '*'
-        transition = self.transitions.get("*", None)
+        transition = self.transitions.get(ANY_STATE, None)
         if transition is not None:
             return transition
 
         # 4. Any-except-target wildcard '+'
-        return self.transitions.get("+", None)
+        return self.transitions.get(ANY_OTHER_STATE, None)
 
     def add_transition(
         self,
@@ -568,11 +576,11 @@ class FSMMeta:
             return True
 
         # Universal wildcard '*'
-        if "*" in self.transitions:
+        if ANY_STATE in self.transitions:
             return True
 
         # Any-except-target wildcard '+'
-        if "+" in self.transitions and self.transitions["+"].target != state:
+        if ANY_OTHER_STATE in self.transitions and self.transitions[ANY_OTHER_STATE].target != state:
             return True
 
         return False
@@ -932,8 +940,8 @@ class FSMFieldMixin:
         try:
             result = method(instance, *args, **kwargs)
             if next_state is not None:
-                if hasattr(next_state, "get_state"):
-                    next_state = next_state.get_state(instance, method, result, args=args, kwargs=kwargs)
+                if isinstance(next_state, State):
+                    next_state = next_state.get_state(instance, result, args=args, kwargs=kwargs)
                     signal_kwargs["target"] = next_state
                 self.set_proxy(instance, next_state)
                 self.set_state(instance, next_state)
@@ -1372,7 +1380,7 @@ class ConcurrentTransitionMixin:
 
 def transition(
     field: FSMFieldMixin | str,
-    source: StateSource = "*",
+    source: StateSource = ANY_STATE,
     target: StateTarget = None,
     on_error: StateValue | None = None,
     conditions: list[ConditionFunc] | None = None,
@@ -1603,7 +1611,6 @@ class State:
     def get_state(
         self,
         model: Model,
-        transition: Callable[..., Any],
         result: Any,
         args: tuple[Any, ...] = (),
         kwargs: dict[str, Any] | None = None,
@@ -1613,7 +1620,6 @@ class State:
 
         Args:
             model: The model instance being transitioned.
-            transition: The transition method that was called.
             result: The return value of the transition method.
             args: Positional arguments passed to the transition method.
             kwargs: Keyword arguments passed to the transition method.
@@ -1663,7 +1669,6 @@ class RETURN_VALUE(State):
     def get_state(
         self,
         model: Model,
-        transition: Callable[..., Any],
         result: Any,
         args: tuple[Any, ...] = (),
         kwargs: dict[str, Any] | None = None,
@@ -1673,7 +1678,6 @@ class RETURN_VALUE(State):
 
         Args:
             model: The model instance (unused).
-            transition: The transition method (unused).
             result: The return value to use as the new state.
             args: Method arguments (unused).
             kwargs: Method keyword arguments (unused).
@@ -1737,7 +1741,6 @@ class GET_STATE(State):
     def get_state(
         self,
         model: Model,
-        transition: Callable[..., Any],
         result: Any,
         args: tuple[Any, ...] = (),
         kwargs: dict[str, Any] | None = None,
@@ -1747,7 +1750,6 @@ class GET_STATE(State):
 
         Args:
             model: The model instance to pass to func.
-            transition: The transition method (unused).
             result: The transition's return value (unused).
             args: Arguments to pass to func.
             kwargs: Keyword arguments to pass to func.
